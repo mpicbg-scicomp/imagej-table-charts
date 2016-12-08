@@ -7,11 +7,14 @@
  */
 
 
-import java.awt.Color;
-import java.util.Iterator;
-
-import javax.swing.JFrame;
-
+import fiji.util.gui.GenericDialogPlus;
+import ij.WindowManager;
+import javafx.scene.chart.Chart;
+import net.imagej.ImageJ;
+import net.imagej.display.WindowService;
+import net.imagej.table.*;
+import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
 import org.apache.commons.math.stat.descriptive.SummaryStatistics;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartFrame;
@@ -19,15 +22,17 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.block.BlockBorder;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.scijava.command.Command;
+import org.scijava.display.Display;
+import org.scijava.display.DisplayService;
+import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
 
-import fiji.util.gui.GenericDialogPlus;
-import net.imagej.ImageJ;
-import net.imagej.table.DefaultGenericTable;
-import net.imagej.table.DoubleColumn;
-import net.imagej.table.GenericColumn;
-import net.imagej.table.GenericTable;
-import net.imglib2.util.Pair;
-import net.imglib2.util.ValuePair;
+import java.awt.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.LinkedList;
+import javax.swing.JFrame;
 
 /**
  * This tutorial shows how to work with tables using ImageJ API
@@ -35,29 +40,24 @@ import net.imglib2.util.ValuePair;
  * Author: Robert Haase, Scientific Computing Facility, MPI-CBG Dresden, rhaase@mpi-cbg.de
  * Date: September 2016
  */
-public class TableStatistics {
 
+@Plugin(type = Command.class, menuPath="Tutorials>HelloWorld")
+public class TableStatistics implements Command {
 
-	public static void main(final String... args) {
-		new TableStatistics();
+	static ImageJ ij;
+
+	public static void main(final String... args)
+	{
+		ij = new ImageJ();
+		ij.ui().showUI();
+
+		ij.ui().show("Population of largest towns", createSampleTable(" A"));
+		ij.ui().show("Population of largest towns", createSampleTable(" B"));
 	}
 
-	final ImageJ ij;
 
 	public TableStatistics()
 	{
-		// we need an instance of ImageJ to show the table finally.
-		ij  = new ImageJ();
-		ij.ui().showUI();
-		// first, we create a table
-		GenericTable table = createSampleTable();
-
-		// after creating a table, you can show it to the user
-		ij.ui().show("Population of largest towns", table);
-
-		logTableStatistics(table);
-		
-		showChartWindow("A Chart", generateChartFromTable(table));
 	}
 	
 	private static void showChartWindow(String title, JFreeChart chart) {
@@ -67,6 +67,11 @@ public class TableStatistics {
 	}
 	
 	private static Pair<DoubleColumn, DoubleColumn> getFirstTwoDoubleColumns(GenericTable table) {
+		List<DoubleColumn> l = new LinkedList<>();
+		for(Column<?> column : table)
+			if(column instanceof DoubleColumn)
+				l.add((DoubleColumn) column);
+
 		return new ValuePair<>((DoubleColumn) table.get(1), (DoubleColumn) table.get(2));
 	}
 
@@ -112,7 +117,7 @@ public class TableStatistics {
 	}
 
 
-	private void logTableStatistics(GenericTable table) {
+	private static void logTableStatistics(GenericTable table) {
 		for(Object column : table) {
 			if(column instanceof DoubleColumn) {
 				final DoubleColumn doublecolumn = (DoubleColumn) column;
@@ -133,12 +138,12 @@ public class TableStatistics {
 	 *
 	 * @return a table with strings and numbers
 	 */
-	private GenericTable createSampleTable()
+	private static GenericTable createSampleTable(String header_postfix)
 	{
 		// we create two columns
-		GenericColumn nameColumn = new GenericColumn("Town");
-		DoubleColumn populationColumn = new DoubleColumn("Population");
-		DoubleColumn sizeColumn = new DoubleColumn("Size");
+		GenericColumn nameColumn = new GenericColumn("Town" + header_postfix);
+		DoubleColumn populationColumn = new DoubleColumn("Population" + header_postfix);
+		DoubleColumn sizeColumn = new DoubleColumn("Size" + header_postfix);
 
 		// we fill the columns with information about the largest towns in the world.
 		nameColumn.add("Karachi");
@@ -168,5 +173,25 @@ public class TableStatistics {
 		table.add(sizeColumn);
 
 		return table;
+	}
+
+	@Parameter
+	DisplayService displayService;
+
+	private Pair<GenericTable, String> getActiveTable() {
+		try {
+			TableDisplay display = (TableDisplay) displayService.getActiveDisplay();
+			return new ValuePair((GenericTable) display.get(0), display.getName());
+		} catch(NullPointerException | ClassCastException | IndexOutOfBoundsException e) {
+			return null;
+		}
+	}
+
+	@Override
+	public void run() {
+		System.out.println("Hello World!");
+		Pair<GenericTable, String> tableAndItsName = getActiveTable();
+		JFreeChart chart = generateChartFromTable(tableAndItsName.getA());
+		showChartWindow(tableAndItsName.getB(), chart);
 	}
 }
