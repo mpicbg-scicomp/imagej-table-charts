@@ -12,22 +12,22 @@ public class TableStatisticsApp {
 
 	static ImageJ ij;
 
-	public static void main(final String... args)
-	{
+	public static void main(final String... args) {
 		ij = new ImageJ();
 		ij.ui().showUI();
 
-		ij.ui().show("Population of largest towns", createSampleTable(" A"));
+		GenericTable table = createSampleTable(" A");
+		ij.ui().show("Population of largest towns", table);
 		ij.ui().show("Population of largest towns", createSampleTable(" B"));
 	}
 
 	private void showSampleGenericDialogPlus() {
 		GenericDialogPlus gdp = new GenericDialogPlus("Dialog");
-
 		gdp.addNumericField("Beschreibung ", 5 , 2);
 		gdp.addChoice("Beschreibung laben", new String[]{"T-test, Wilcoxon"}, "T-test");
 		gdp.addImageChoice("Beschreibung bild", "");
 		gdp.showDialog();
+
 		if (gdp.wasCanceled())
 			return;
 
@@ -36,8 +36,7 @@ public class TableStatisticsApp {
 		//ImagePlus imp = gdp.getNextImage();
 	}
 
-	private static GenericTable createSampleTable(String header_postfix)
-	{
+	private static GenericTable createSampleTable(String header_postfix) {
 		// we create two columns
 		GenericColumn nameColumn = new GenericColumn("Town" + header_postfix);
 		DoubleColumn populationColumn = new DoubleColumn("Population" + header_postfix);
@@ -72,6 +71,4 @@ public class TableStatisticsApp {
 
 		return table;
 	}
-
-
 }

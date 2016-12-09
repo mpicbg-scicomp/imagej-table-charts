@@ -25,9 +25,7 @@ import org.scijava.plugin.Plugin;
 
 import java.awt.*;
 import java.util.Iterator;
-import java.util.List;
-import java.util.LinkedList;
-import javax.swing.JFrame;
+import javax.swing.*;
 
 /**
  * This tutorial shows how to work with tables using ImageJ API
@@ -39,25 +37,37 @@ import javax.swing.JFrame;
 @Plugin(type = Command.class, menuPath="Table>ScatterPlot")
 public class TableStatistics implements Command {
 
-	@Override
-	public void run() {
-		System.out.println("Hello World!");
-		Pair<GenericTable, String> tableAndItsName = getActiveTable();
-		JFreeChart chart = generateChartFromTable(tableAndItsName.getA());
-		showChartWindow(tableAndItsName.getB(), chart);
-	}
-	static ImageJ ij;
-
 	@Parameter
 	private DisplayService displayService;
+
+	@Override
+	public void run() {
+		try {
+			Pair<GenericTable, String> tableAndItsName = getActiveTable();
+			JFreeChart chart = generateChartFromTable(tableAndItsName.getB(), tableAndItsName.getA());
+			showChartWindow(tableAndItsName.getB(), chart);
+		}
+		catch (AbortRun e) {
+			e.showMessage();
+		}
+	}
 
 	private Pair<GenericTable, String> getActiveTable() {
 		try {
 			TableDisplay display = (TableDisplay) displayService.getActiveDisplay();
-			return new ValuePair((GenericTable) display.get(0), display.getName());
+			return new ValuePair<>((GenericTable) checkNotNull(display.get(0)), display.getName());
 		} catch(NullPointerException | ClassCastException | IndexOutOfBoundsException e) {
-			return null;
+			throw new AbortRun("No table window is active.");
 		}
+	}
+
+	private static JFreeChart generateChartFromTable(String table_title, GenericTable table) {
+		final Pair<DoubleColumn, DoubleColumn> columns = chooseColumns(table_title, table);
+		final String xlabel = columns.getA().getHeader();
+		final String ylabel = columns.getB().getHeader();
+		final String chart_title = "ScatterPlot - " + xlabel + " - " + ylabel;
+		final XYSeriesCollection series = xySeriesCollectionFromColumns(columns.getA(), columns.getB());
+		return beautifyChart(ChartFactory.createScatterPlot(chart_title, xlabel, ylabel, series));
 	}
 
 	private static void showChartWindow(String title, JFreeChart chart) {
@@ -66,25 +76,19 @@ public class TableStatistics implements Command {
 		frame.setVisible(true);
 	}
 
-	private static JFreeChart generateChartFromTable(GenericTable table) {
-		Pair<DoubleColumn, DoubleColumn> columnpair = getFirstTwoDoubleColumns(table);
-		final XYSeriesCollection dataset = xySeriesCollectionFromColumns(columnpair.getA(), columnpair.getB());
-		JFreeChart chart = ChartFactory.createScatterPlot(
-				"ScatterPlot - " + columnpair.getA().getHeader() + " - " + columnpair.getB().getHeader(),
-				columnpair.getA().getHeader(), columnpair.getB().getHeader(), dataset);
-		//chart.addSubtitle(new TextTitle("subtitle"));
-		chart.setBackgroundPaint(Color.white);
-		chart.getLegend().setFrame(BlockBorder.NONE);
-		return chart;
-	}
-
-	private static Pair<DoubleColumn, DoubleColumn> getFirstTwoDoubleColumns(GenericTable table) {
-		List<DoubleColumn> l = new LinkedList<>();
-		for(Column<?> column : table)
-			if(column instanceof DoubleColumn)
-				l.add((DoubleColumn) column);
-
-		return new ValuePair<>((DoubleColumn) table.get(1), (DoubleColumn) table.get(2));
+	private static Pair<DoubleColumn, DoubleColumn> chooseColumns(String title, GenericTable table) {
+		TableColumnSelectorDialog d = new TableColumnSelectorDialog("Hello World!");
+		try {
+			d.AddDoubleColumnChoice("X Columns", table, 0);
+			d.AddDoubleColumnChoice("Y Columns", table, 1);
+		}
+		catch (TableColumnSelectorDialog.NoDoubleColumnsException e) {
+			throw new AbortRun("There is no column in the table" + title + ", containing numbers.");
+		}
+		d.showDialog();
+		if(! d.wasOKed())
+			throw new AbortRun(null);
+		return new ValuePair<>(d.getChoosenDoubleColumn(), d.getChoosenDoubleColumn());
 	}
 
 	private static XYSeriesCollection xySeriesCollectionFromColumns(DoubleColumn xcolumn, DoubleColumn ycolumn) {
@@ -101,18 +105,27 @@ public class TableStatistics implements Command {
 		return dataset;
 	}
 
-	private static void logTableStatistics(GenericTable table) {
-		for(Object column : table) {
-			if(column instanceof DoubleColumn) {
-				final DoubleColumn doublecolumn = (DoubleColumn) column;
-				final SummaryStatistics stats = new SummaryStatistics();
-				for(double cellvalue : doublecolumn) 
-					stats.addValue(cellvalue);
-				final double mean = stats.getMean();
-				final double sd = stats.getStandardDeviation();
-				ij.log().info("column " + doublecolumn.getHeader() + ":   mean is " + mean + "   standard deviation is " + sd);
-			}
-		}
+	private static JFreeChart beautifyChart(JFreeChart chart) {
+		chart.setBackgroundPaint(Color.white);
+		chart.getLegend().setFrame(BlockBorder.NONE);
+		return chart;
 	}
 
+	private static <T> T checkNotNull(T value) {
+		if(value == null)
+			throw new NullPointerException();
+		return value;
+	}
+
+	static private class AbortRun extends RuntimeException {
+		private String message;
+		private AbortRun(String message) { this.message = message; }
+		private void showMessage() {
+			if(!message.isEmpty())
+				JOptionPane.showMessageDialog(null,
+						message,
+						"ScatterPlot",
+						JOptionPane.INFORMATION_MESSAGE);
+		}
+	}
 }
