@@ -5,6 +5,8 @@ import net.imagej.table.DoubleColumn;
 import net.imagej.table.GenericColumn;
 import net.imagej.table.GenericTable;
 
+import java.util.Random;
+
 /**
  * Created by arzt on 08/12/2016.
  */
@@ -18,7 +20,7 @@ public class TableStatisticsApp {
 
 		GenericTable table = createSampleTable(" A");
 		ij.ui().show("Population of largest towns", table);
-		ij.ui().show("Population of largest towns", createSampleTable(" B"));
+		ij.ui().show("Random data", createSampleTable2());
 	}
 
 	private void showSampleGenericDialogPlus() {
@@ -36,35 +38,36 @@ public class TableStatisticsApp {
 		//ImagePlus imp = gdp.getNextImage();
 	}
 
+	private static GenericTable createSampleTable2() {
+		Random random = new Random();
+		GenericTable table = new DefaultGenericTable();
+		GenericColumn nameColumn = new GenericColumn("Town");
+		DoubleColumn populationColumn = new DoubleColumn("Population");
+		DoubleColumn sizeColumn = new DoubleColumn("Size");
+		for(String town : new String[]{"sadf","sdf","C","D"}) {
+			for(int i = 0; i < 20; i++) {
+				nameColumn.add(town);
+				populationColumn.add(random.nextGaussian() * 2 + 3);
+				sizeColumn.add(random.nextGaussian() + 1);
+			}
+		}
+		table.add(nameColumn);
+		table.add(populationColumn);
+		table.add(sizeColumn);
+		return table;
+	}
+
 	private static GenericTable createSampleTable(String header_postfix) {
-		// we create two columns
 		GenericColumn nameColumn = new GenericColumn("Town" + header_postfix);
 		DoubleColumn populationColumn = new DoubleColumn("Population" + header_postfix);
 		DoubleColumn sizeColumn = new DoubleColumn("Size" + header_postfix);
 
-		// we fill the columns with information about the largest towns in the world.
-		nameColumn.add("Karachi");
-		populationColumn.add(23500000.0);
-		sizeColumn.add(45.2);
+		nameColumn.add("Karachi"); populationColumn.add(23500000.0); sizeColumn.add(45.2);
+		nameColumn.add("Bejing"); populationColumn.add(21516000.0); sizeColumn.add(20.0);
+		nameColumn.add("Sao Paolo"); populationColumn.add(21292893.0); sizeColumn.add(42.0);
+		nameColumn.add(0, "Shanghai"); populationColumn.add(0, 24256800.0); sizeColumn.add(0, 10.0);
 
-		nameColumn.add("Bejing");
-		populationColumn.add(21516000.0);
-		sizeColumn.add(20.0);
-
-		nameColumn.add("Sao Paolo");
-		populationColumn.add(21292893.0);
-		sizeColumn.add(42.0);
-
-		// but actually, the largest town is Shanghai,
-		// so let's add it at the beginning of the table.
-		nameColumn.add(0, "Shanghai");
-		populationColumn.add(0, 24256800.0);
-		sizeColumn.add(0, 10.0);
-
-		// After filling the columns, you can create a table
 		GenericTable table = new DefaultGenericTable();
-
-		// and add the columns to that table
 		table.add(nameColumn);
 		table.add(populationColumn);
 		table.add(sizeColumn);

@@ -65,7 +65,11 @@ public class TableBoxPlotPlugin extends AbstractTableChartPlugin {
 
 		List<V> get(K k) {
 			List<V> list = map.get(k);
-			return (list == null) ? new ArrayList<>() : list;
+			if(list == null) {
+				list = new ArrayList<>();
+				map.put(k, list);
+			}
+			return list;
 		}
 
 		Set<Map.Entry<K, List<V>>> entrySet() { return map.entrySet(); }
