@@ -17,7 +17,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
-		<main-class>TableStatistics</main-class>
+		<main-class>TableScatterPlotPlugin</main-class>
 	</properties>
 
 	<repositories>
