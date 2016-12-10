@@ -8,9 +8,7 @@
 
 import net.imagej.table.*;
 import net.imglib2.util.Pair;
-import net.imglib2.util.ValuePair;
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartFrame;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -30,27 +28,22 @@ import java.util.Iterator;
 public class TableScatterPlotPlugin extends AbstractTableChartPlugin {
 
 	protected JFreeChart generateChartFromTable(String table_title, GenericTable table) {
-		final Pair<DoubleColumn, DoubleColumn> columns = chooseColumns(table_title, table);
-		final String xlabel = columns.getA().getHeader();
-		final String ylabel = columns.getB().getHeader();
+		ScatterPlotDialog dialog = runScatterPlotDialog(table_title, table);
+		final String xlabel = dialog.getXColumn().getHeader();
+		final String ylabel = dialog.getYColumn().getHeader();
 		final String chart_title = "ScatterPlot - " + xlabel + " - " + ylabel;
-		final XYSeriesCollection series = xySeriesCollectionFromColumns(columns.getA(), columns.getB());
+		final XYSeriesCollection series = xySeriesCollectionFromColumns(dialog.getXColumn(), dialog.getYColumn());
 		return beautifyChart(ChartFactory.createScatterPlot(chart_title, xlabel, ylabel, series));
 	}
 
-	private static Pair<DoubleColumn, DoubleColumn> chooseColumns(String title, GenericTable table) {
-		TableColumnSelectorDialog d = new TableColumnSelectorDialog("Hello World!");
-		try {
-			d.AddDoubleColumnChoice("X Columns", table, 0);
-			d.AddDoubleColumnChoice("Y Columns", table, 1);
-		}
-		catch (TableColumnSelectorDialog.NoDoubleColumnsException e) {
-			throw new AbortRun("There is no column in the table" + title + ", containing numbers.");
-		}
-		d.showDialog();
-		if(! d.wasOKed())
-			throw new AbortRun(null);
-		return new ValuePair<>(d.getChoosenDoubleColumn(), d.getChoosenDoubleColumn());
+	private static ScatterPlotDialog runScatterPlotDialog(String table_title, GenericTable table) {
+		final ScatterPlotDialog d = new ScatterPlotDialog(table_title, table);
+		d.run();
+		if(!d.wasOked())
+			throw new AbortRun("");
+		if(d.getXColumn() == null || d.getYColumn() == null)
+			throw new AbortRun("Necessary columns where not chosen.");
+		return d;
 	}
 
 	private static XYSeriesCollection xySeriesCollectionFromColumns(DoubleColumn xcolumn, DoubleColumn ycolumn) {

@@ -1,7 +1,6 @@
 import fiji.util.gui.GenericDialogPlus;
 import net.imagej.table.Column;
 import net.imagej.table.DoubleColumn;
-import net.imagej.table.GenericColumn;
 import net.imagej.table.GenericTable;
 
 import java.util.LinkedList;
@@ -39,33 +38,34 @@ class TableColumnSelectorDialog extends GenericDialogPlus {
 				list_of_columns.add(column);
 			}
 		}
-		if(result.isEmpty())
-			throw new NoDoubleColumnsException();
 		addChoice(label,
 				result.toArray(new String[result.size()]),
 				(default_index > 0 && default_index < result.size()) ? result.get(default_index) : null);
 		list_of_list_of_columns.add(list_of_columns);
 	}
 
-	Column<?> getChoosenColumn() {
+	Column<?> getChosenColumn() {
 		Vector<Column<?>> list_of_columns = list_of_list_of_columns.removeFirst();
-		return list_of_columns.get(getNextChoiceIndex());
+		return list_of_columns.isEmpty() ? null : list_of_columns.get(getNextChoiceIndex());
 	}
 
-	DoubleColumn getChoosenDoubleColumn() {
-		return (DoubleColumn) getChoosenColumn();
+	DoubleColumn getChosenDoubleColumn() {
+		return (DoubleColumn) getChosenColumn();
 	}
 
-	Column<?> getChoosenNonDoubleColumn() {
-		return getChoosenColumn();
+	Column<?> getChosenNonDoubleColumn() {
+		return getChosenColumn();
 	}
 
 	class NoDoubleColumnsException extends RuntimeException {}
 	interface ColumnFilter { boolean get(Column<?> column); }
 	class DoubleColumnFilter implements ColumnFilter {
-		public boolean get(Column<?> column) { return column instanceof DoubleColumn; }
+		@Override public boolean get(Column<?> column) { return column instanceof DoubleColumn; }
 	}
 	class NonDoubleColumnFilter implements ColumnFilter {
-		public boolean get(Column<?> column) { return !(column instanceof DoubleColumn); }
+		@Override public boolean get(Column<?> column) { return !(column instanceof DoubleColumn); }
+	}
+	class AllColumnFilter implements ColumnFilter {
+		@Override public boolean get(Column<?> column) { return true; }
 	}
 }

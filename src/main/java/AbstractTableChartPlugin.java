@@ -51,9 +51,7 @@ abstract class AbstractTableChartPlugin implements Command {
 		protected AbortRun(String message) { this.message = message; }
 		protected void showMessage() {
 			if(!message.isEmpty())
-				JOptionPane.showMessageDialog(null,
-						message,
-						"ScatterPlot",
+				JOptionPane.showMessageDialog(null, message, "ScatterPlot",
 						JOptionPane.INFORMATION_MESSAGE);
 		}
 	}

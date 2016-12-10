@@ -17,39 +17,53 @@ import java.util.*;
 @Plugin(type = Command.class, menuPath="Table>BoxPlot")
 public class TableBoxPlotPlugin extends AbstractTableChartPlugin {
 
-	protected JFreeChart generateChartFromTable(String b, GenericTable a) {
-		Collection<DoubleColumn> l = new LinkedList<>();
-		l.add((DoubleColumn)a.get(1));
-		l.add((DoubleColumn)a.get(2));
-		final BoxAndWhiskerCategoryDataset dataset = createDataset(a.get(0), l); // TODO
+	protected JFreeChart generateChartFromTable(final String title, final GenericTable table) {
+		BoxPlotDialog dialog = runDialog(title, table);
+		final BoxAndWhiskerCategoryDataset dataset = dialog.getUseKeyColumn() ?
+						createDataset(dialog.getKeyColumn(), dialog.getValueColumns()) :
+						createDataset(dialog.getValueColumns());
+		return createChart(title, dataset);
+	}
 
+	private BoxPlotDialog runDialog(String title, GenericTable table) {
+		BoxPlotDialog dialog = new BoxPlotDialog(title, table);
+		dialog.run();
+		if(!dialog.wasOked())
+			throw new AbortRun(null);
+		return dialog;
+	}
+
+	static private BoxAndWhiskerCategoryDataset createDataset(Collection<DoubleColumn> value_columns) {
+		final DefaultBoxAndWhiskerCategoryDataset dataset = new DefaultBoxAndWhiskerCategoryDataset();
+		for(DoubleColumn value_column : value_columns)
+			dataset.add(value_column, "", value_column.getHeader());
+		return dataset;
+	}
+
+	static private <K> BoxAndWhiskerCategoryDataset createDataset(Column<K> key_column, Collection<DoubleColumn> value_columns) {
+		final DefaultBoxAndWhiskerCategoryDataset dataset
+				= new DefaultBoxAndWhiskerCategoryDataset();
+		for(DoubleColumn value_column : value_columns) {
+			String column_title = value_column.getHeader();
+			MyMultiMap<K, Double> map = new MyMultiMap<>(key_column, value_column);
+			for (Map.Entry<K, List<Double>> entry : map.entrySet())
+				dataset.add(entry.getValue(), entry.getKey().toString(), column_title);
+		}
+		return dataset;
+	}
+
+	static private JFreeChart createChart(String title, BoxAndWhiskerCategoryDataset dataset) {
 		final CategoryAxis xAxis = new CategoryAxis("Type");
 		final NumberAxis yAxis = new NumberAxis("Value");
 		yAxis.setAutoRangeIncludesZero(false);
 		final BoxAndWhiskerRenderer renderer = new BoxAndWhiskerRenderer();
 		renderer.setFillBox(false);
 		final CategoryPlot plot = new CategoryPlot(dataset, xAxis, yAxis, renderer);
-		final String chart_title = b;
 		final Font font = new Font("SansSerif", Font.BOLD, 14);
-		return new JFreeChart(chart_title ,font , plot, true );
+		return new JFreeChart(title ,font , plot, true );
 	}
 
-	private <K> BoxAndWhiskerCategoryDataset createDataset(Column<K> key_column, Collection<DoubleColumn> value_columns) {
-		final DefaultBoxAndWhiskerCategoryDataset dataset
-				= new DefaultBoxAndWhiskerCategoryDataset();
-
-		for(DoubleColumn value_column : value_columns) {
-			String column_title = value_column.getHeader();
-			MyMultiMap<K, Double> map = new MyMultiMap<>(key_column, value_column);
-			for(Map.Entry<K, List<Double>> entry : map.entrySet())
-				dataset.add(entry.getValue(), entry.getKey().toString(), column_title);
-		}
-
-		return dataset;
-	}
-
-
-	private class MyMultiMap<K,V> {
+	static private class MyMultiMap<K,V> {
 
 		private Map<K, List<V>> map;
 
