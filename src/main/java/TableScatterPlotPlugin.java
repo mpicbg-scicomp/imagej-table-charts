@@ -7,7 +7,6 @@
  */
 
 import net.imagej.table.*;
-import net.imglib2.util.Pair;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYSeries;
@@ -38,7 +37,7 @@ public class TableScatterPlotPlugin extends AbstractTableChartPlugin {
 
 	private static ScatterPlotDialog runScatterPlotDialog(String table_title, GenericTable table) {
 		final ScatterPlotDialog d = new ScatterPlotDialog(table_title, table);
-		d.run();
+		d.showDialog();
 		if(!d.wasOked())
 			throw new AbortRun("");
 		if(d.getXColumn() == null || d.getYColumn() == null)

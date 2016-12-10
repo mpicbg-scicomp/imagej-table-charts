@@ -27,7 +27,7 @@ public class TableBoxPlotPlugin extends AbstractTableChartPlugin {
 
 	private BoxPlotDialog runDialog(String title, GenericTable table) {
 		BoxPlotDialog dialog = new BoxPlotDialog(title, table);
-		dialog.run();
+		dialog.showDialog();
 		if(!dialog.wasOked())
 			throw new AbortRun(null);
 		return dialog;
