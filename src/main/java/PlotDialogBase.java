@@ -12,24 +12,16 @@ abstract class PlotDialogBase {
 	}
 
 	void showDialog() {
-		create();
+		dialog = new TableColumnSelectorDialog(title);
 		addControls();
-		show();
+		dialog.showDialog();
+		was_oked = dialog.wasOKed();
 		readControls();
 	}
 
 	protected abstract void readControls();
 
 	protected abstract void addControls();
-
-	private void create() {
-		dialog = new TableColumnSelectorDialog(title);
-	}
-
-	private void show() {
-		dialog.showDialog();
-		was_oked = dialog.wasOKed();
-	}
 
 	public Boolean wasOked() { return was_oked; }
 }

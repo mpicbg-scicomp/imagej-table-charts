@@ -12,7 +12,7 @@ import org.scijava.plugin.Parameter;
 import javax.swing.*;
 import java.awt.*;
 
-abstract class AbstractTableChartPlugin implements Command {
+abstract class ChartPluginBase implements Command {
 
 	@Parameter
 	private DisplayService displayService;
@@ -21,17 +21,16 @@ abstract class AbstractTableChartPlugin implements Command {
 	public void run() {
 		try {
 			Pair<GenericTable, String> tableAndItsName = getActiveTable();
-			JFreeChart chart = generateChartFromTable(tableAndItsName.getB(), tableAndItsName.getA());
-			showChartWindow(tableAndItsName.getB(), chart);
+			runWithTable(tableAndItsName.getB(), tableAndItsName.getA());
 		}
 		catch (AbortRun e) {
 			e.showMessage();
 		}
 	}
 
-	protected abstract JFreeChart generateChartFromTable(String b, GenericTable a);
+	protected abstract void runWithTable(String table_table, GenericTable table);
 
-	private static void showChartWindow(String title, JFreeChart chart) {
+	protected static void showChartWindow(String title, JFreeChart chart) {
 		JFrame frame = new ChartFrame(title, chart);
 		frame.pack();
 		frame.setVisible(true);
@@ -67,4 +66,5 @@ abstract class AbstractTableChartPlugin implements Command {
 		chart.getLegend().setFrame(BlockBorder.NONE);
 		return chart;
 	}
+
 }

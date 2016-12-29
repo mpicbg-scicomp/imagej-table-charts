@@ -1,9 +1,7 @@
 import fiji.util.gui.GenericDialogPlus;
 import net.imagej.ImageJ;
-import net.imagej.table.DefaultGenericTable;
-import net.imagej.table.DoubleColumn;
-import net.imagej.table.GenericColumn;
-import net.imagej.table.GenericTable;
+import net.imagej.table.*;
+import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 
 import java.util.Random;
 
@@ -74,4 +72,5 @@ public class TableStatisticsApp {
 
 		return table;
 	}
+
 }
