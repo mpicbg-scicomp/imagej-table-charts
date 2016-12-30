@@ -1,21 +1,26 @@
+import net.imagej.plot.AbstractPlot;
+import net.imagej.plot.PlotService;
 import net.imagej.table.GenericTable;
 import net.imagej.table.TableDisplay;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
-import org.jfree.chart.ChartFrame;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.block.BlockBorder;
+import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.display.DisplayService;
 import org.scijava.plugin.Parameter;
 
 import javax.swing.*;
-import java.awt.*;
 
 abstract class ChartPluginBase implements Command {
 
+	@Parameter(label = "plot", type = ItemIO.OUTPUT)
+	public AbstractPlot output;
+
 	@Parameter
-	private DisplayService displayService;
+	public PlotService plotService;
+
+	@Parameter
+	public DisplayService displayService;
 	
 	@Override
 	public void run() {
@@ -29,12 +34,6 @@ abstract class ChartPluginBase implements Command {
 	}
 
 	protected abstract void runWithTable(String table_table, GenericTable table);
-
-	protected static void showChartWindow(String title, JFreeChart chart) {
-		JFrame frame = new ChartFrame(title, chart);
-		frame.pack();
-		frame.setVisible(true);
-	}
 
 	protected Pair<GenericTable, String> getActiveTable() {
 		try {
@@ -61,10 +60,4 @@ abstract class ChartPluginBase implements Command {
 		return value;
 	}
 	
-	protected static JFreeChart beautifyChart(JFreeChart chart) {
-		chart.setBackgroundPaint(Color.white);
-		chart.getLegend().setFrame(BlockBorder.NONE);
-		return chart;
-	}
-
 }

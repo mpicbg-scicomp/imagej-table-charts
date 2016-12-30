@@ -1,7 +1,6 @@
 import fiji.util.gui.GenericDialogPlus;
 import net.imagej.ImageJ;
 import net.imagej.table.*;
-import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 
 import java.util.Random;
 

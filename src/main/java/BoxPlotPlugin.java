@@ -1,15 +1,11 @@
+import net.imagej.plot.CategoryChart;
+import net.imagej.plot.RangeStrategy;
+import net.imagej.table.Column;
 import net.imagej.table.DoubleColumn;
 import net.imagej.table.GenericTable;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.CategoryAxis;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.renderer.category.BoxAndWhiskerRenderer;
-import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 import org.scijava.command.Command;
 import org.scijava.plugin.Plugin;
 
-import java.awt.Font;
 import java.util.*;
 
 @Plugin(type = Command.class, menuPath="Table>BoxPlot")
@@ -18,16 +14,13 @@ public class BoxPlotPlugin extends ChartPluginBase {
 	private GenericTable table;
 	private String tableTitle;
 	private BoxPlotDialog dialog;
-	private DefaultBoxAndWhiskerCategoryDataset chartDataset;
-	private JFreeChart chart;
+	private CategoryChart chart;
 
 	protected void runWithTable(final String title, final GenericTable table) {
 		this.table = table;
 		this.tableTitle = title;
 		runDialog();
-		createDataset();
 		createChart();
-		showChartWindow(tableTitle, chart);
 	}
 
 	private void runDialog() {
@@ -37,39 +30,62 @@ public class BoxPlotPlugin extends ChartPluginBase {
 			throw new AbortRun(null);
 	}
 
+	private void createChart() {
+		chart = plotService.createCategoryChart();
+		chart.setTitle(tableTitle);
+		chart.getCategoryAxis().setLabel("Type");
+		chart.getNumberAxis().setLabel("Value");
+		chart.getNumberAxis().setAutoRange(RangeStrategy.AUTO);
+		createDataset();
+		output = chart;
+	}
+
 	private void createDataset() {
-		chartDataset = new DefaultBoxAndWhiskerCategoryDataset();
-		for(DoubleColumn value_column : dialog.getValueColumns()) {
-			String column_title = value_column.getHeader();
-			if(dialog.getUseKeyColumn()) {
-				MyMultiMap<?, Double> map = new MyMultiMap<>(dialog.getKeyColumn(), value_column);
-				for (Map.Entry<?, List<Double>> entry : map.entrySet())
-					chartDataset.add(entry.getValue(), entry.getKey().toString(), column_title);
-			}
-			else
-				chartDataset.add(value_column, "", value_column.getHeader());
+		if (dialog.getUseKeyColumn())
+			createDatasetWithKeys();
+		else
+			createDatasetWithoutKeys();
+	}
+
+	private void createDatasetWithoutKeys() {
+		chart.getCategoryAxis().setCategories(Collections.singletonList(""));
+		for (DoubleColumn valueColumn : dialog.getValueColumns()) {
+			String column_title = valueColumn.getHeader();
+			List<Collection<Double>> values = new ArrayList<>(1);
+			values.add(valueColumn);
+			chart.getItems().add(chart.createBoxSeries(column_title, values));
 		}
 	}
 
-	private void createChart() {
-		final CategoryAxis xAxis = new CategoryAxis("Type");
-		final NumberAxis yAxis = new NumberAxis("Value");
-		yAxis.setAutoRangeIncludesZero(false);
-		final BoxAndWhiskerRenderer renderer = new BoxAndWhiskerRenderer();
-		renderer.setFillBox(false);
-		final CategoryPlot plot = new CategoryPlot(chartDataset, xAxis, yAxis, renderer);
-		final Font font = new Font("SansSerif", Font.BOLD, 14);
-		chart = new JFreeChart(tableTitle ,font , plot, true );
+	private void createDatasetWithKeys() {
+		Column<?> keyColumn = dialog.getKeyColumn();
+		List<?> keys = new ArrayList<>(new TreeSet<>(keyColumn));
+		chart.getCategoryAxis().setCategories(elementsToString(keys));
+		for (DoubleColumn valueColumn : dialog.getValueColumns()) {
+			String column_title = valueColumn.getHeader();
+			List<Collection<Double>> values = new ArrayList<>(keys.size());
+			MyMultiMap<Object, Double> map = new MyMultiMap<>(keyColumn, valueColumn);
+			for (Object key : keys)
+				values.add(map.get(key));
+			chart.getItems().add(chart.createBoxSeries(column_title, values));
+		}
+	}
+
+	static List<String> elementsToString(List<? extends Object> input) {
+		List<String> result = new ArrayList<>(input.size());
+		for(Object o : input)
+			result.add(o.toString());
+		return result;
 	}
 
 	static private class MyMultiMap<K,V> {
 
 		private Map<K, List<V>> map;
 
-		MyMultiMap(Collection<K> keys, Collection<V> values) {
+		MyMultiMap(Collection<? extends K> keys, Collection<? extends V> values) {
 			map = new HashMap<>();
-			Iterator<K> kIterator = keys.iterator();
-			Iterator<V> vIterator = values.iterator();
+			Iterator<? extends K> kIterator = keys.iterator();
+			Iterator<? extends V> vIterator = values.iterator();
 			while(kIterator.hasNext() && vIterator.hasNext())
 				add(kIterator.next(), vIterator.next());
 		}

@@ -18,6 +18,7 @@
 
 	<properties>
 		<main-class>ScatterPlotPlugin</main-class>
+        <enforcer.skip>true</enforcer.skip>
 	</properties>
 
 	<repositories>
@@ -31,6 +32,11 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-ui-swing</artifactId>
+			<version>0.21.2-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
