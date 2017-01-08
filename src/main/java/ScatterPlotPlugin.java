@@ -7,7 +7,7 @@
  */
 
 import net.imagej.plot.*;
-import net.imagej.table.*;
+import net.imagej.table.Column;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
@@ -18,36 +18,33 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 @Plugin(type = Command.class, menuPath="Table>ScatterPlot")
-public class ScatterPlotPlugin extends ChartPluginBase {
+public class ScatterPlotPlugin implements Command {
 
-	private GenericTable table;
-	private String tableTitle;
-	private ScatterPlotDialog dialog;
+	@Parameter
+	public Column<Double> xColumn;
 
-	protected void runWithTable(String table_title, GenericTable table) {
-		this.table = table;
-		this.tableTitle = table_title;
-		runDialog();
+	@Parameter
+	public Column<Double> yColumn;
+
+	@Parameter(label = "plot", type = ItemIO.OUTPUT)
+	public AbstractPlot output;
+
+	@Parameter
+	private PlotService plotService;
+
+	@Override
+	public void run() {
 		generateChart();
 	}
 
-	private void runDialog() {
-		dialog = new ScatterPlotDialog(tableTitle, table);
-		dialog.showDialog();
-		if(!dialog.wasOked())
-			throw new AbortRun("");
-		if(dialog.getXColumn() == null || dialog.getYColumn() == null)
-			throw new AbortRun("Necessary columns where not chosen.");
-	}
-
 	private void generateChart() {
-		final String xLabel = dialog.getXColumn().getHeader();
-		final String yLabel = dialog.getYColumn().getHeader();
+		final String xLabel = xColumn.getHeader();
+		final String yLabel = yColumn.getHeader();
 		final String chart_title = "ScatterPlot - " + xLabel + " - " + yLabel;
 		XYPlot plot = plotService.createXYPlot();
 		plot.setTitle("Line Styles");
-		Collection<Double> xs = new ArrayList<>(dialog.getXColumn());
-		Collection<Double> ys = new ArrayList<>(dialog.getYColumn());
+		Collection<Double> xs = new ArrayList<>(xColumn);
+		Collection<Double> ys = new ArrayList<>(yColumn);
 		XYSeries series = plot.createXYSeries("", xs, ys);
 		series.setStyle(plot.createSeriesStyle(Colors.RED, LineStyle.NONE, MarkerStyle.CIRCLE));
 		plot.setTitle(chart_title);
@@ -56,5 +53,4 @@ public class ScatterPlotPlugin extends ChartPluginBase {
 		plot.getYAxis().setLabel(yLabel);
 		output = plot;
 	}
-
 }

@@ -1,33 +1,45 @@
+import net.imagej.plot.AbstractPlot;
 import net.imagej.plot.CategoryChart;
+import net.imagej.plot.PlotService;
 import net.imagej.plot.RangeStrategy;
 import net.imagej.table.Column;
-import net.imagej.table.DoubleColumn;
-import net.imagej.table.GenericTable;
+import net.imagej.table.Table;
+import org.scijava.ItemIO;
 import org.scijava.command.Command;
+import org.scijava.plugin.Attr;
+import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import java.util.*;
 
 @Plugin(type = Command.class, menuPath="Table>BoxPlot")
-public class BoxPlotPlugin extends ChartPluginBase {
+public class BoxPlotPlugin implements Command {
 
-	private GenericTable table;
-	private String tableTitle;
-	private BoxPlotDialog dialog;
+	@Parameter
+	public Table<?,?> table;
+
+	@Parameter
+	public boolean useKeyColumn;
+
+	@Parameter(attrs={@Attr(name="elementOf", value="table")})
+	public Column<?> keyColumn;
+
+	@Parameter(attrs={@Attr(name="subsetOf", value="table")})
+	public Set<Column<Double>> valueColumns;
+
+	@Parameter(type = ItemIO.OUTPUT)
+	public AbstractPlot output;
+
+	@Parameter
+	private PlotService plotService;
+
 	private CategoryChart chart;
 
-	protected void runWithTable(final String title, final GenericTable table) {
-		this.table = table;
-		this.tableTitle = title;
-		runDialog();
-		createChart();
-	}
+	private String tableTitle = "table title";
 
-	private void runDialog() {
-		dialog = new BoxPlotDialog(tableTitle, table);
-		dialog.showDialog();
-		if(!dialog.wasOked())
-			throw new AbortRun(null);
+	@Override
+	public void run() {
+		createChart();
 	}
 
 	private void createChart() {
@@ -41,7 +53,7 @@ public class BoxPlotPlugin extends ChartPluginBase {
 	}
 
 	private void createDataset() {
-		if (dialog.getUseKeyColumn())
+		if (useKeyColumn)
 			createDatasetWithKeys();
 		else
 			createDatasetWithoutKeys();
@@ -49,7 +61,7 @@ public class BoxPlotPlugin extends ChartPluginBase {
 
 	private void createDatasetWithoutKeys() {
 		chart.getCategoryAxis().setCategories(Collections.singletonList(""));
-		for (DoubleColumn valueColumn : dialog.getValueColumns()) {
+		for (Column<Double> valueColumn : valueColumns) {
 			String column_title = valueColumn.getHeader();
 			List<Collection<Double>> values = new ArrayList<>(1);
 			values.add(valueColumn);
@@ -58,10 +70,9 @@ public class BoxPlotPlugin extends ChartPluginBase {
 	}
 
 	private void createDatasetWithKeys() {
-		Column<?> keyColumn = dialog.getKeyColumn();
 		List<?> keys = new ArrayList<>(new TreeSet<>(keyColumn));
 		chart.getCategoryAxis().setCategories(elementsToString(keys));
-		for (DoubleColumn valueColumn : dialog.getValueColumns()) {
+		for (Column<Double> valueColumn : valueColumns) {
 			String column_title = valueColumn.getHeader();
 			List<Collection<Double>> values = new ArrayList<>(keys.size());
 			MyMultiMap<Object, Double> map = new MyMultiMap<>(keyColumn, valueColumn);
@@ -71,7 +82,7 @@ public class BoxPlotPlugin extends ChartPluginBase {
 		}
 	}
 
-	static List<String> elementsToString(List<? extends Object> input) {
+	static private List<String> elementsToString(List<? extends Object> input) {
 		List<String> result = new ArrayList<>(input.size());
 		for(Object o : input)
 			result.add(o.toString());

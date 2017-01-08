@@ -1,34 +1,35 @@
-import net.imagej.table.GenericTable;
+import net.imagej.table.Column;
 import org.apache.commons.math3.stat.inference.TTest;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
+import java.util.Collection;
+
 @Plugin(type = Command.class, menuPath="Table>Calculate t-Test")
-public class TTestPlugIn extends ChartPluginBase {
+public class TTestPlugIn implements Command {
+
+	@Parameter
+	public Column<Double> firstColumn;
+
+	@Parameter
+	public Column<Double> secondColumn;
 
 	@Parameter(label = "p-value", type = ItemIO.OUTPUT)
-	double p_value;
-
-	private GenericTable table;
-	private String tableTitle;
+	public double p_value;
 
 	@Override
-	protected void runWithTable(String table_title, GenericTable table) {
-		this.table = table;
-		this.tableTitle = table_title;
-		runDialog();
-		p_value = new TTest().tTest(dialog.getXColumn().getArray(), dialog.getYColumn().getArray());
+	public void run() {
+		p_value = new TTest().tTest(getArray(firstColumn), getArray(secondColumn));
 	}
 
-	private ScatterPlotDialog dialog;
-
-	private void runDialog() {
-		dialog = new ScatterPlotDialog(tableTitle, table);
-		dialog.showDialog();
-		if(!dialog.wasOked())
-			throw new AbortRun(null);
+	static private double[] getArray(Collection<Double> values) {
+		double[] r = new double[values.size()];
+		int i = 0;
+		for(double v : values)
+			r[i++] = v;
+		return r;
 	}
 
 }

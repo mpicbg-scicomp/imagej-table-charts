@@ -3,28 +3,32 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
+import org.scijava.display.Display;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 @Plugin(type = Command.class, menuPath="Table>Calculate Statistic Properties")
-public class DiscriptiveStatisticsPlugIn extends ChartPluginBase {
+public class DiscriptiveStatisticsPlugIn implements Command {
+
+	@Parameter
+	public Display<Table<?,?>> activeTableDisplay;
 
 	@Parameter(type = ItemIO.OUTPUT)
-	private Object output;
+	public Table<?,?> output;
 
 	private DefaultGenericTable result_table;
 
 	@Override
-	protected void runWithTable(String table_title, GenericTable table) {
+	public void run() {
 		result_table = new DefaultGenericTable();
 		addPropertyColumn();
-		for(Column<?> column : table)
+		for(Column<?> column : activeTableDisplay.get(0))
 			if(column instanceof DoubleColumn)
 				addStatisticsColumn((DoubleColumn) column);
 		output = result_table;
 	}
 
-	void addPropertyColumn() {
+	private void addPropertyColumn() {
 		GenericColumn c = new GenericColumn();
 		c.add("mean");
 		c.add("standard deviation");
@@ -37,7 +41,7 @@ public class DiscriptiveStatisticsPlugIn extends ChartPluginBase {
 		result_table.add(c);
 	}
 
-	void addStatisticsColumn(DoubleColumn column) {
+	private void addStatisticsColumn(DoubleColumn column) {
 		SummaryStatistics stat = calculateSummaryStatistics(column);
 		double median = new Median().evaluate(column.getArray());
 		GenericColumn c = new GenericColumn();
@@ -53,7 +57,7 @@ public class DiscriptiveStatisticsPlugIn extends ChartPluginBase {
 		result_table.add(c);
 	}
 
-	static SummaryStatistics calculateSummaryStatistics(DoubleColumn column) {
+	static private SummaryStatistics calculateSummaryStatistics(DoubleColumn column) {
 		SummaryStatistics stat = new SummaryStatistics();
 		for(double x : column)
 			stat.addValue(x);
