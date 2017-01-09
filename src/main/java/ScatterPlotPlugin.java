@@ -8,23 +8,29 @@
 
 import net.imagej.plot.*;
 import net.imagej.table.Column;
+import net.imagej.table.Table;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.util.Colors;
+import widgets.MutableChoices;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @Plugin(type = Command.class, menuPath="Table>ScatterPlot")
 public class ScatterPlotPlugin implements Command {
 
-	@Parameter
-	public Column<Double> xColumn;
+	@Parameter(callback = "tableChanged")
+	public Table<Column<?>, ?> table;
 
-	@Parameter
-	public Column<Double> yColumn;
+	@Parameter(initializer = "tableChanged")
+	public MutableChoices<Column<Double>> xColumn;
+
+	@Parameter(initializer = "tableChanged")
+	public MutableChoices<Column<Double>> yColumn;
 
 	@Parameter(label = "plot", type = ItemIO.OUTPUT)
 	public AbstractPlot output;
@@ -37,14 +43,29 @@ public class ScatterPlotPlugin implements Command {
 		generateChart();
 	}
 
+	private void tableChanged() {
+		if(table == null)
+			return;
+		List<Column<Double>> l = new ArrayList<>(table.size());
+		for(Column<?> c : table) {
+			if (c.getType().equals(Double.class)){
+				l.add((Column<Double>) c);
+			}
+		}
+		if(xColumn != null)
+			xColumn.setChoices(l, c -> c.getHeader());
+		if(yColumn != null)
+			yColumn.setChoices(l, c -> c.getHeader());
+	}
+
 	private void generateChart() {
-		final String xLabel = xColumn.getHeader();
-		final String yLabel = yColumn.getHeader();
+		final String xLabel = xColumn.get().getHeader();
+		final String yLabel = yColumn.get().getHeader();
 		final String chart_title = "ScatterPlot - " + xLabel + " - " + yLabel;
 		XYPlot plot = plotService.createXYPlot();
 		plot.setTitle("Line Styles");
-		Collection<Double> xs = new ArrayList<>(xColumn);
-		Collection<Double> ys = new ArrayList<>(yColumn);
+		Collection<Double> xs = new ArrayList<>(xColumn.get());
+		Collection<Double> ys = new ArrayList<>(yColumn.get());
 		XYSeries series = plot.createXYSeries("", xs, ys);
 		series.setStyle(plot.createSeriesStyle(Colors.RED, LineStyle.NONE, MarkerStyle.CIRCLE));
 		plot.setTitle(chart_title);

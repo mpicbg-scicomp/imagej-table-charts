@@ -6,26 +6,27 @@ import net.imagej.table.Column;
 import net.imagej.table.Table;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
-import org.scijava.plugin.Attr;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import widgets.MultipleChoices;
+import widgets.MutableChoices;
 
 import java.util.*;
 
 @Plugin(type = Command.class, menuPath="Table>BoxPlot")
 public class BoxPlotPlugin implements Command {
 
-	@Parameter
-	public Table<?,?> table;
+	@Parameter(callback = "tableChanged")
+	public Table<Column<?>,?> table;
 
 	@Parameter
 	public boolean useKeyColumn;
 
-	@Parameter(attrs={@Attr(name="elementOf", value="table")})
-	public Column<?> keyColumn;
+	@Parameter(initializer = "tableChanged")
+	public MutableChoices<Column<?>> keyColumn;
 
-	@Parameter(attrs={@Attr(name="subsetOf", value="table")})
-	public Set<Column<Double>> valueColumns;
+	@Parameter(initializer = "tableChanged")
+	public MultipleChoices<Column<Double>> valueColumns;
 
 	@Parameter(type = ItemIO.OUTPUT)
 	public AbstractPlot output;
@@ -40,6 +41,22 @@ public class BoxPlotPlugin implements Command {
 	@Override
 	public void run() {
 		createChart();
+	}
+
+	private void tableChanged() {
+		if(table == null)
+			return;
+		if(keyColumn != null)
+			keyColumn.setChoices(table, c -> c.getHeader());
+		if(valueColumns != null) {
+			List<Column<Double>> l = new ArrayList<>(table.size());
+			for(Column<?> c : table) {
+				if (c.getType().equals(Double.class)){
+					l.add((Column<Double>) c);
+				}
+			}
+			valueColumns.setChoices(l, c -> c.getHeader());
+		}
 	}
 
 	private void createChart() {
@@ -61,7 +78,7 @@ public class BoxPlotPlugin implements Command {
 
 	private void createDatasetWithoutKeys() {
 		chart.getCategoryAxis().setCategories(Collections.singletonList(""));
-		for (Column<Double> valueColumn : valueColumns) {
+		for (Column<Double> valueColumn : valueColumns.get()) {
 			String column_title = valueColumn.getHeader();
 			List<Collection<Double>> values = new ArrayList<>(1);
 			values.add(valueColumn);
@@ -70,12 +87,12 @@ public class BoxPlotPlugin implements Command {
 	}
 
 	private void createDatasetWithKeys() {
-		List<?> keys = new ArrayList<>(new TreeSet<>(keyColumn));
+		List<Object> keys = new ArrayList<>(new TreeSet<>(keyColumn.get()));
 		chart.getCategoryAxis().setCategories(elementsToString(keys));
-		for (Column<Double> valueColumn : valueColumns) {
+		for (Column<Double> valueColumn : valueColumns.get()) {
 			String column_title = valueColumn.getHeader();
 			List<Collection<Double>> values = new ArrayList<>(keys.size());
-			MyMultiMap<Object, Double> map = new MyMultiMap<>(keyColumn, valueColumn);
+			MyMultiMap<Object, Double> map = new MyMultiMap<>(keyColumn.get(), valueColumn);
 			for (Object key : keys)
 				values.add(map.get(key));
 			chart.getItems().add(chart.createBoxSeries(column_title, values));

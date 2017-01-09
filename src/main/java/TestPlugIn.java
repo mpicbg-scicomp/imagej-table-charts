@@ -3,6 +3,7 @@ import net.imagej.table.Table;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import widgets.MultipleChoices;
 import widgets.MutableChoices;
 
 /**
@@ -15,7 +16,7 @@ public class TestPlugIn implements Command {
 	public Table<Column<?>,?> table;
 
 	@Parameter(initializer = "init")
-	public MutableChoices<Column<?>> value;
+	public MultipleChoices<Column<?>> value;
 
 	@Override
 	public void run() {
