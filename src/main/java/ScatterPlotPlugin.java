@@ -18,6 +18,7 @@ import widgets.MutableChoices;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 @Plugin(type = Command.class, menuPath="Table>ScatterPlot")
@@ -44,14 +45,7 @@ public class ScatterPlotPlugin implements Command {
 	}
 
 	private void tableChanged() {
-		if(table == null)
-			return;
-		List<Column<Double>> l = new ArrayList<>(table.size());
-		for(Column<?> c : table) {
-			if (c.getType().equals(Double.class)){
-				l.add((Column<Double>) c);
-			}
-		}
+		Iterable<Column<Double>> l = Utils.filterDoubleColumns(table);
 		if(xColumn != null)
 			xColumn.setChoices(l, c -> c.getHeader());
 		if(yColumn != null)

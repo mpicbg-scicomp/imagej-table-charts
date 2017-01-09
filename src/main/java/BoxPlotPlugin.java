@@ -44,19 +44,10 @@ public class BoxPlotPlugin implements Command {
 	}
 
 	private void tableChanged() {
-		if(table == null)
-			return;
 		if(keyColumn != null)
 			keyColumn.setChoices(table, c -> c.getHeader());
-		if(valueColumns != null) {
-			List<Column<Double>> l = new ArrayList<>(table.size());
-			for(Column<?> c : table) {
-				if (c.getType().equals(Double.class)){
-					l.add((Column<Double>) c);
-				}
-			}
-			valueColumns.setChoices(l, c -> c.getHeader());
-		}
+		if(valueColumns != null)
+			valueColumns.setChoices(Utils.filterDoubleColumns(table), c -> c.getHeader());
 	}
 
 	private void createChart() {

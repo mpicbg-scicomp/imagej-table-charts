@@ -1,4 +1,5 @@
 import net.imagej.table.*;
+import net.imglib2.img.basictypeaccess.array.DoubleArray;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.scijava.ItemIO;
@@ -11,7 +12,7 @@ import org.scijava.plugin.Plugin;
 public class DiscriptiveStatisticsPlugIn implements Command {
 
 	@Parameter
-	public Display<Table<?,?>> activeTableDisplay;
+	public Display<Table<Column<?>,?>> activeTableDisplay;
 
 	@Parameter(type = ItemIO.OUTPUT)
 	public Table<?,?> output;
@@ -22,9 +23,8 @@ public class DiscriptiveStatisticsPlugIn implements Command {
 	public void run() {
 		result_table = new DefaultGenericTable();
 		addPropertyColumn();
-		for(Column<?> column : activeTableDisplay.get(0))
-			if(column instanceof DoubleColumn)
-				addStatisticsColumn((DoubleColumn) column);
+		for(Column<Double> column : Utils.filterDoubleColumns(activeTableDisplay.get(0)))
+			addStatisticsColumn(column);
 		output = result_table;
 	}
 
@@ -41,9 +41,9 @@ public class DiscriptiveStatisticsPlugIn implements Command {
 		result_table.add(c);
 	}
 
-	private void addStatisticsColumn(DoubleColumn column) {
+	private void addStatisticsColumn(Column<Double> column) {
 		SummaryStatistics stat = calculateSummaryStatistics(column);
-		double median = new Median().evaluate(column.getArray());
+		double median = new Median().evaluate(Utils.toArray(column));
 		GenericColumn c = new GenericColumn();
 		c.setHeader(column.getHeader());
 		c.add(stat.getMean());
@@ -57,7 +57,7 @@ public class DiscriptiveStatisticsPlugIn implements Command {
 		result_table.add(c);
 	}
 
-	static private SummaryStatistics calculateSummaryStatistics(DoubleColumn column) {
+	static private SummaryStatistics calculateSummaryStatistics(Column<Double> column) {
 		SummaryStatistics stat = new SummaryStatistics();
 		for(double x : column)
 			stat.addValue(x);

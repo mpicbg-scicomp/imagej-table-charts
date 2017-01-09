@@ -7,9 +7,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import widgets.MutableChoices;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 @Plugin(type = Command.class, menuPath="Table>Calculate t-Test")
 public class TTestPlugIn implements Command {
@@ -27,14 +25,7 @@ public class TTestPlugIn implements Command {
 	public double p_value;
 
 	private void tableChanged() {
-		if(table == null)
-			return;
-		List<Column<Double>> l = new ArrayList<>(table.size());
-		for(Column<?> c : table) {
-			if (c.getType().equals(Double.class)){
-				l.add((Column<Double>) c);
-			}
-		}
+		Iterable<Column<Double>> l = Utils.filterDoubleColumns(table);
 		if(firstColumn != null)
 			firstColumn.setChoices(l, c -> c.getHeader());
 		if(secondColumn != null)
@@ -43,15 +34,7 @@ public class TTestPlugIn implements Command {
 
 	@Override
 	public void run() {
-		p_value = new TTest().tTest(getArray(firstColumn.get()), getArray(secondColumn.get()));
-	}
-
-	static private double[] getArray(Collection<Double> values) {
-		double[] r = new double[values.size()];
-		int i = 0;
-		for(double v : values)
-			r[i++] = v;
-		return r;
+		p_value = new TTest().tTest(Utils.toArray(firstColumn.get()), Utils.toArray(secondColumn.get()));
 	}
 
 }
