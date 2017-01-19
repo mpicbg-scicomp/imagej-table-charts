@@ -17,8 +17,6 @@ import org.scijava.util.Colors;
 import widgets.MutableChoices;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 @Plugin(type = Command.class, menuPath="Table>ScatterPlot")
@@ -56,16 +54,16 @@ public class ScatterPlotPlugin implements Command {
 		final String xLabel = xColumn.get().getHeader();
 		final String yLabel = yColumn.get().getHeader();
 		final String chart_title = "ScatterPlot - " + xLabel + " - " + yLabel;
-		XYPlot plot = plotService.createXYPlot();
+		XYPlot plot = plotService.newXYPlot();
 		plot.setTitle("Line Styles");
-		Collection<Double> xs = new ArrayList<>(xColumn.get());
-		Collection<Double> ys = new ArrayList<>(yColumn.get());
-		XYSeries series = plot.createXYSeries("", xs, ys);
-		series.setStyle(plot.createSeriesStyle(Colors.RED, LineStyle.NONE, MarkerStyle.CIRCLE));
+		List<Double> xs = new ArrayList<>(xColumn.get());
+		List<Double> ys = new ArrayList<>(yColumn.get());
+		XYSeries series = plot.addXYSeries();
+		series.setValues(xs,ys);
+		series.setStyle(plot.newSeriesStyle(Colors.RED, LineStyle.NONE, MarkerStyle.CIRCLE));
 		plot.setTitle(chart_title);
-		plot.getItems().add(series);
-		plot.getXAxis().setLabel(xLabel);
-		plot.getYAxis().setLabel(yLabel);
+		plot.xAxis().setLabel(xLabel);
+		plot.yAxis().setLabel(yLabel);
 		output = plot;
 	}
 }

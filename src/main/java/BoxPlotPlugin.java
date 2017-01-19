@@ -1,7 +1,7 @@
 import net.imagej.plot.AbstractPlot;
+import net.imagej.plot.BoxSeries;
 import net.imagej.plot.CategoryChart;
 import net.imagej.plot.PlotService;
-import net.imagej.plot.RangeStrategy;
 import net.imagej.table.Column;
 import net.imagej.table.Table;
 import org.scijava.ItemIO;
@@ -34,10 +34,6 @@ public class BoxPlotPlugin implements Command {
 	@Parameter
 	private PlotService plotService;
 
-	private CategoryChart chart;
-
-	private String tableTitle = "table title";
-
 	@Override
 	public void run() {
 		createChart();
@@ -51,57 +47,77 @@ public class BoxPlotPlugin implements Command {
 	}
 
 	private void createChart() {
-		chart = plotService.createCategoryChart();
-		chart.setTitle(tableTitle);
-		chart.getCategoryAxis().setLabel("Type");
-		chart.getNumberAxis().setLabel("Value");
-		chart.getNumberAxis().setAutoRange(RangeStrategy.AUTO);
-		createDataset();
-		output = chart;
-	}
-
-	private void createDataset() {
 		if (useKeyColumn)
-			createDatasetWithKeys();
+			buildChartWithKeys();
 		else
-			createDatasetWithoutKeys();
+			buildChartWithoutKeys();
 	}
 
-	private void createDatasetWithoutKeys() {
-		chart.getCategoryAxis().setCategories(Collections.singletonList(""));
-		for (Column<Double> valueColumn : valueColumns.get()) {
-			String column_title = valueColumn.getHeader();
-			List<Collection<Double>> values = new ArrayList<>(1);
-			values.add(valueColumn);
-			chart.getItems().add(chart.createBoxSeries(column_title, values));
+	private void buildChartWithKeys() {
+		output = ChartBuilderWithKey.build(plotService, keyColumn.get(), valueColumns.get());
+		buildTitle();
+	}
+
+	private void buildChartWithoutKeys() {
+		CategoryChart<String> chart = plotService.newCategoryChart(String.class);
+		chart.numberAxis().setAutoRange();
+		chart.categoryAxis().setLabel("Column");
+		Map<String, Collection<Double>>	data = new TreeMap<>();
+		for (Column<Double> valueColumn : valueColumns.get())
+			data.put(valueColumn.getHeader(), valueColumn);
+		BoxSeries<String> series = chart.addBoxSeries();
+		series.setLabel("data");
+		series.setLegendVisible(false);
+		series.setValues(data);
+		output = chart;
+		buildTitle();
+	}
+
+	private void buildTitle() {
+		String title = "Boxplot - ";
+		for(Column<Double> col : valueColumns.get())
+			title += col.getHeader() + ", ";
+		output.setTitle(title.substring(0, title.length() - 2));
+	}
+
+
+	static private class ChartBuilderWithKey<K> {
+
+		final PlotService plotService;
+
+		private CategoryChart<K> chart;
+
+		private ChartBuilderWithKey(PlotService plotService) {
+			this.plotService = plotService;
 		}
-	}
 
-	private void createDatasetWithKeys() {
-		List<Object> keys = new ArrayList<>(new TreeSet<>(keyColumn.get()));
-		chart.getCategoryAxis().setCategories(elementsToString(keys));
-		for (Column<Double> valueColumn : valueColumns.get()) {
-			String column_title = valueColumn.getHeader();
-			List<Collection<Double>> values = new ArrayList<>(keys.size());
-			MyMultiMap<Object, Double> map = new MyMultiMap<>(keyColumn.get(), valueColumn);
-			for (Object key : keys)
-				values.add(map.get(key));
-			chart.getItems().add(chart.createBoxSeries(column_title, values));
+		private CategoryChart<K> getChart(Column<K> keyColumn, Iterable<Column<Double>> valueColumns) {
+			chart = plotService.newCategoryChart(keyColumn.getType());
+			chart.numberAxis().setAutoRange();
+			chart.categoryAxis().setLabel(keyColumn.getHeader());
+			for (Column<Double> valueColumn : valueColumns)
+				addColumn(keyColumn, valueColumn);
+			return chart;
 		}
-	}
 
-	static private List<String> elementsToString(List<? extends Object> input) {
-		List<String> result = new ArrayList<>(input.size());
-		for(Object o : input)
-			result.add(o.toString());
-		return result;
+		private void addColumn(Column<K> keyColumn, Column<Double> valueColumn) {
+			BoxSeries<K> series = chart.addBoxSeries();
+			series.setLabel(valueColumn.getHeader());
+			MyMultiMap<K, Double> map = new MyMultiMap<>(keyColumn, valueColumn);
+			series.setValues(map.toMap());
+		}
+
+		static private <K> CategoryChart<K> build(PlotService plotService,
+					Column<K> keyColumn, Iterable<Column<Double>> valueColumn) {
+			return new ChartBuilderWithKey<K>(plotService).getChart(keyColumn, valueColumn);
+		}
 	}
 
 	static private class MyMultiMap<K,V> {
 
 		private Map<K, List<V>> map;
 
-		MyMultiMap(Collection<? extends K> keys, Collection<? extends V> values) {
+		public MyMultiMap(Collection<? extends K> keys, Collection<? extends V> values) {
 			map = new HashMap<>();
 			Iterator<? extends K> kIterator = keys.iterator();
 			Iterator<? extends V> vIterator = values.iterator();
@@ -109,9 +125,9 @@ public class BoxPlotPlugin implements Command {
 				add(kIterator.next(), vIterator.next());
 		}
 
-		void add(K k, V v) { get(k).add(v); }
+		public void add(K k, V v) { get(k).add(v); }
 
-		List<V> get(K k) {
+		private List<V> get(K k) {
 			List<V> list = map.get(k);
 			if(list == null) {
 				list = new ArrayList<>();
@@ -120,7 +136,7 @@ public class BoxPlotPlugin implements Command {
 			return list;
 		}
 
-		Set<Map.Entry<K, List<V>>> entrySet() { return map.entrySet(); }
+		public Map<K, List<V>> toMap() { return map; }
 	}
 
 }
