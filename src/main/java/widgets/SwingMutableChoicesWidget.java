@@ -42,6 +42,7 @@ public class SwingMutableChoicesWidget<T> extends SwingInputWidget<MutableChoice
 		model.setValue(value);
 		try {
 			model.getItem().initialize(model.getModule());
+			model.getPanel().refresh();
 		} catch (MethodCallException e) {
 			e.printStackTrace();
 		}
@@ -65,6 +66,8 @@ public class SwingMutableChoicesWidget<T> extends SwingInputWidget<MutableChoice
 
 	public void setChoices(Iterable<T> choices, MutableChoices.PrettyPrinter printer) {
 		comboBoxModel.removeAllElements();
+		if(! get().getItem().isRequired())
+			comboBoxModel.addElement(new ComboBoxItem<T>("", null));
 		for(T choice : choices)
 			comboBoxModel.addElement(new ComboBoxItem<T>(printer.toString(choice), choice));
 	}

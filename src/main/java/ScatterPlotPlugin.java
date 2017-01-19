@@ -22,16 +22,16 @@ import java.util.List;
 @Plugin(type = Command.class, menuPath="Table>ScatterPlot")
 public class ScatterPlotPlugin implements Command {
 
-	@Parameter(callback = "tableChanged")
+	@Parameter(label = "Table", callback = "tableChanged")
 	public Table<Column<?>, ?> table;
 
-	@Parameter(initializer = "tableChanged")
+	@Parameter(label = "X Column", initializer = "tableChanged")
 	public MutableChoices<Column<Double>> xColumn;
 
-	@Parameter(initializer = "tableChanged")
+	@Parameter(label = "Y Column", initializer = "tableChanged")
 	public MutableChoices<Column<Double>> yColumn;
 
-	@Parameter(label = "plot", type = ItemIO.OUTPUT)
+	@Parameter(label = "Scatter Plot", type = ItemIO.OUTPUT)
 	public AbstractPlot output;
 
 	@Parameter

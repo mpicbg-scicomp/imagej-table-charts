@@ -5,7 +5,9 @@ import net.imagej.plot.PlotService;
 import net.imagej.table.Column;
 import net.imagej.table.Table;
 import org.scijava.ItemIO;
+import org.scijava.ItemVisibility;
 import org.scijava.command.Command;
+import org.scijava.display.Display;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import widgets.MultipleChoices;
@@ -16,19 +18,19 @@ import java.util.*;
 @Plugin(type = Command.class, menuPath="Table>BoxPlot")
 public class BoxPlotPlugin implements Command {
 
-	@Parameter(callback = "tableChanged")
-	public Table<Column<?>,?> table;
+	@Parameter(label = "Select table", callback = "tableChanged")
+	private Table<Column<?>,?> table;
 
-	@Parameter
-	public boolean useKeyColumn;
-
-	@Parameter(initializer = "tableChanged")
-	public MutableChoices<Column<?>> keyColumn;
-
-	@Parameter(initializer = "tableChanged")
+	@Parameter(label = "Select columns", initializer = "tableChanged")
 	public MultipleChoices<Column<Double>> valueColumns;
 
-	@Parameter(type = ItemIO.OUTPUT)
+	@Parameter(visibility = ItemVisibility.MESSAGE)
+	private final String LABEL_OPTIONAL = "optional";
+
+	@Parameter(label = "Select key column", initializer = "tableChanged", required = false)
+	public MutableChoices<Column<?>> keyColumn;
+
+	@Parameter(label = "Boxplot", type = ItemIO.OUTPUT)
 	public AbstractPlot output;
 
 	@Parameter
@@ -42,12 +44,16 @@ public class BoxPlotPlugin implements Command {
 	private void tableChanged() {
 		if(keyColumn != null)
 			keyColumn.setChoices(table, c -> c.getHeader());
-		if(valueColumns != null)
-			valueColumns.setChoices(Utils.filterDoubleColumns(table), c -> c.getHeader());
+		if(valueColumns != null) {
+			Iterable<Column<Double>> choices = Utils.filterDoubleColumns(table);
+			valueColumns.setChoices(choices, c -> c.getHeader());
+			for(Column<Double> choice : choices)
+				valueColumns.set(choice, true);
+		}
 	}
 
 	private void createChart() {
-		if (useKeyColumn)
+		if (keyColumn != null)
 			buildChartWithKeys();
 		else
 			buildChartWithoutKeys();

@@ -1,5 +1,4 @@
 import net.imagej.table.*;
-import net.imglib2.img.basictypeaccess.array.DoubleArray;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.scijava.ItemIO;
@@ -8,13 +7,13 @@ import org.scijava.display.Display;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-@Plugin(type = Command.class, menuPath="Table>Calculate Statistic Properties")
-public class DiscriptiveStatisticsPlugIn implements Command {
+@Plugin(type = Command.class, menuPath="Table>Calculate Descriptive Statistics")
+public class DescriptiveStatisticsPlugIn implements Command {
 
 	@Parameter
 	public Display<Table<Column<?>,?>> activeTableDisplay;
 
-	@Parameter(type = ItemIO.OUTPUT)
+	@Parameter(label = "Descriptive Statistics", type = ItemIO.OUTPUT)
 	public Table<?,?> output;
 
 	private DefaultGenericTable result_table;

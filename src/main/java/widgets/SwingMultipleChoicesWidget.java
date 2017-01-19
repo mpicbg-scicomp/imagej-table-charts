@@ -26,10 +26,12 @@ public class SwingMultipleChoicesWidget<T> extends SwingInputWidget<MultipleChoi
 	@Override
 	public void set(final WidgetModel model) {
 		super.set(model);
+		getComponent().setLayout(new BoxLayout(getComponent(), BoxLayout.PAGE_AXIS));
 		result = new MyMultipleChoices<T>(this);
 		get().setValue(result);
 		try {
 			model.getItem().initialize(model.getModule());
+			model.getPanel().refresh();
 		} catch (MethodCallException e) {
 			e.printStackTrace();
 		}
@@ -37,7 +39,7 @@ public class SwingMultipleChoicesWidget<T> extends SwingInputWidget<MultipleChoi
 
 	@Override
 	protected void doRefresh() {
-		// FIXME
+		checkBoxes.forEach((checkBox, choice) -> checkBox.setSelected(result.get(choice)));
 	}
 
 	@Override
@@ -51,29 +53,26 @@ public class SwingMultipleChoicesWidget<T> extends SwingInputWidget<MultipleChoi
 	}
 
 	private void setChoices(Iterable<T> choices, MultipleChoices.PrettyPrinter<T> prettyPrinter) {
+		JPanel panel = getComponent();
 		for(JCheckBox oldCheckBox : checkBoxes.keySet())
-			getComponent().remove(oldCheckBox);
+			panel.remove(oldCheckBox);
 		checkBoxes.clear();
-		result.selected.clear();
+		result.get().clear();
 		if(choices != null)
 			for(T choice : choices) {
 				String text = prettyPrinter.toString(choice);
 				JCheckBox checkBox = new JCheckBox(text);
 				checkBoxes.put(checkBox, choice);
-				checkBox.addActionListener(e -> updateChoice(e));
-				getComponent().add(checkBox);
+				checkBox.addActionListener(e -> checkBoxChanged(e));
+				panel.add(checkBox);
 			}
-		this.getComponent().revalidate();
+		panel.revalidate();
 	}
 
-	private void updateChoice(ActionEvent e) {
+	private void checkBoxChanged(ActionEvent e) {
 		JCheckBox source = (JCheckBox) e.getSource();
 		T choice = checkBoxes.get(source);
-		boolean value = source.isSelected();
-		if(value)
-			result.selected.add(choice);
-		else
-			result.selected.remove(choice);
+		result.set(choice, source.isSelected());
 		get().setValue(result);
 	}
 
@@ -99,8 +98,22 @@ public class SwingMultipleChoicesWidget<T> extends SwingInputWidget<MultipleChoi
 		}
 
 		@Override
+		public void set(T choice, boolean value) {
+			if(value)
+				selected.add(choice);
+			else
+				selected.remove(choice);
+		}
+
+		@Override
 		public Set<T> get() {
 			return selected;
+		}
+
+		@Override
+		public void set(Set<T> s) {
+			selected.clear();
+			selected.addAll(s);
 		}
 
 	}
