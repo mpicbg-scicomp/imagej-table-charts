@@ -16,34 +16,32 @@ public class DescriptiveStatisticsPlugIn implements Command {
 	@Parameter(label = "Descriptive Statistics", type = ItemIO.OUTPUT)
 	public Table<?,?> output;
 
-	private DefaultGenericTable result_table;
-
 	@Override
 	public void run() {
-		result_table = new DefaultGenericTable();
-		addPropertyColumn();
+		GenericTable table = setupResultTable();
 		for(Column<Double> column : Utils.filterDoubleColumns(activeTableDisplay.get(0)))
-			addStatisticsColumn(column);
-		output = result_table;
+			table.add(setupStatisticsColumn(column));
+		output = table;
 	}
 
-	private void addPropertyColumn() {
-		GenericColumn c = new GenericColumn();
-		c.add("mean");
-		c.add("standard deviation");
-		c.add("variance");
-		c.add("min");
-		c.add("max");
-		c.add("sum");
-		c.add("median");
-		c.add("N");
-		result_table.add(c);
+	static private GenericTable setupResultTable() {
+		GenericTable table = new DefaultGenericTable();
+		table.setRowCount(8);
+		table.setRowHeader(0,"mean");
+		table.setRowHeader(1,"standard deviation");
+		table.setRowHeader(2,"variance");
+		table.setRowHeader(3,"min");
+		table.setRowHeader(4,"max");
+		table.setRowHeader(5,"sum");
+		table.setRowHeader(6,"median");
+		table.setRowHeader(7,"N");
+		return table;
 	}
 
-	private void addStatisticsColumn(Column<Double> column) {
+	private static DoubleColumn setupStatisticsColumn(Column<Double> column) {
 		SummaryStatistics stat = calculateSummaryStatistics(column);
-		double median = new Median().evaluate(Utils.toArray(column));
-		GenericColumn c = new GenericColumn();
+		double median = calculateMean(column);
+		DoubleColumn c = new DoubleColumn();
 		c.setHeader(column.getHeader());
 		c.add(stat.getMean());
 		c.add(stat.getStandardDeviation());
@@ -52,11 +50,15 @@ public class DescriptiveStatisticsPlugIn implements Command {
 		c.add(stat.getMax());
 		c.add(stat.getSum());
 		c.add(median);
-		c.add(stat.getN());
-		result_table.add(c);
+		c.add((double) stat.getN());
+		return c;
 	}
 
-	static private SummaryStatistics calculateSummaryStatistics(Column<Double> column) {
+	public static double calculateMean(Column<Double> column) {
+		return new Median().evaluate(Utils.toArray(column));
+	}
+
+	public static SummaryStatistics calculateSummaryStatistics(Column<Double> column) {
 		SummaryStatistics stat = new SummaryStatistics();
 		for(double x : column)
 			stat.addValue(x);
