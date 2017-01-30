@@ -17,7 +17,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
-		<main-class>ScatterPlotPlugin</main-class>
+		<main-class>de.mpicbg.maarzt.imagej.ScatterPlotPlugin</main-class>
         <enforcer.skip>true</enforcer.skip>
 	</properties>
 
@@ -52,6 +52,12 @@
 		    <groupId>org.jfree</groupId>
 		    <artifactId>jfreechart</artifactId>
 		    <version>1.0.19</version>
+		</dependency>
+		<dependency>
+			<groupId>org.kie.modules</groupId>
+			<artifactId>org-junit</artifactId>
+			<version>6.2.0.Final</version>
+			<type>pom</type>
 		</dependency>
 	</dependencies>
 </project>
