@@ -39,10 +39,10 @@ public class ScatterPlotPlugin implements Command {
 
 	@Override
 	public void run() {
-		generateChart();
+		output = generateChart(plotService, xColumn.get(), yColumn.get());
 	}
 
-	private void tableChanged() {
+	public void tableChanged() {
 		Iterable<Column<Double>> l = Utils.filterDoubleColumns(table);
 		if(xColumn != null)
 			xColumn.setChoices(l, c -> c.getHeader());
@@ -50,20 +50,22 @@ public class ScatterPlotPlugin implements Command {
 			yColumn.setChoices(l, c -> c.getHeader());
 	}
 
-	private void generateChart() {
-		final String xLabel = xColumn.get().getHeader();
-		final String yLabel = yColumn.get().getHeader();
+	public static XYPlot generateChart(final PlotService plotService, final Column<Double> xColumn,
+									   final Column<Double> yColumn)
+	{
+		final String xLabel = xColumn.getHeader();
+		final String yLabel = yColumn.getHeader();
 		final String chart_title = "ScatterPlot - " + xLabel + " - " + yLabel;
 		XYPlot plot = plotService.newXYPlot();
 		plot.setTitle("Line Styles");
-		List<Double> xs = new ArrayList<>(xColumn.get());
-		List<Double> ys = new ArrayList<>(yColumn.get());
+		List<Double> xs = new ArrayList<>(xColumn);
+		List<Double> ys = new ArrayList<>(yColumn);
 		XYSeries series = plot.addXYSeries();
 		series.setValues(xs,ys);
 		series.setStyle(plot.newSeriesStyle(Colors.RED, LineStyle.NONE, MarkerStyle.CIRCLE));
 		plot.setTitle(chart_title);
 		plot.xAxis().setLabel(xLabel);
 		plot.yAxis().setLabel(yLabel);
-		output = plot;
+		return plot;
 	}
 }

@@ -12,11 +12,11 @@ import java.util.List;
 public class Utils {
 
 	static public Iterable<Column<Double>> filterDoubleColumns(Iterable<Column<?>> input) {
-		List output = new LinkedList();
+		List<Column<Double>> output = new LinkedList<>();
 		if(input != null)
 			for(Column<?> col : input)
-				if(col.getType().equals(Double.class))
-					output.add(col);
+				if(checkColumnType(col, Double.class))
+					output.add(unsafeColumnTypeConversion(col));
 		return output;
 	}
 
@@ -28,6 +28,21 @@ public class Utils {
 		for(int i = 0, n = column.size(); i < n; i++)
 			result[i] = column.get(i);
 		return result;
+	}
+
+	public static <T> Column<T> castColumnType(Column<?> column, Class<T> clazz) {
+		if(checkColumnType(column, clazz))
+			return unsafeColumnTypeConversion(column);
+		throw new ClassCastException();
+	}
+
+	public static boolean checkColumnType(Column<?> column, Class<?> clazz) {
+		return column.getType().equals(clazz);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> Column<T> unsafeColumnTypeConversion(Column<?> column) {
+		return (Column<T>) column;
 	}
 
 }

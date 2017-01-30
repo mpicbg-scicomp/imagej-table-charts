@@ -1,5 +1,6 @@
 package de.mpicbg.maarzt.imagej;
 
+import net.imagej.table.Column;
 import net.imagej.table.GenericTable;
 import org.junit.Test;
 
@@ -10,16 +11,12 @@ import org.junit.Test;
 public class StatisticsTest extends TableTest {
     @Test
     public void testIfStatisticsWork() {
-        GenericTable table = createSampleTable("2");
+        GenericTable table = createSampleTable("");
 
-        int indexPopulation2015Column = table.getColumnIndex("Population 2015");
-        int indexPopulation2016Column = table.getColumnIndex("Population 2016");
+        Column<Double> population2015Column = Utils.castColumnType(table.get("Population 2015"), Double.class);
+        Column<Double> population2016Column = Utils.castColumnType(table.get("Population 2016"), Double.class);
 
-
-        double pvalue = TTestPlugIn.pairedTTest(table.get(indexPopulation2015Column), table.get(indexPopulation2016Column));
-
-
-
-
+        double pvalue = TTestPlugIn.pairedTTest(population2015Column, population2016Column);
     }
+
 }

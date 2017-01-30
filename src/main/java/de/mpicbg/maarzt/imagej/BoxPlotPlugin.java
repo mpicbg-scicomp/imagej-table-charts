@@ -42,6 +42,28 @@ public class BoxPlotPlugin implements Command {
 		createChart();
 	}
 
+	public static CategoryChart<?> generateChart(PlotService plotService, Column<?> keyColumn,
+												 Iterable<Column<Double>> valueColumn)
+	{
+		return ChartBuilderWithKey.build(plotService, keyColumn, valueColumn);
+	}
+
+	public static CategoryChart<?> generateChart(PlotService plotService, Iterable<Column<Double>> valueColumns) {
+		CategoryChart<String> chart = plotService.newCategoryChart(String.class);
+		chart.numberAxis().setAutoRange();
+		chart.categoryAxis().setLabel("Column");
+		Map<String, Collection<Double>> data = new TreeMap<>();
+		for (Column<Double> valueColumn : valueColumns)
+			data.put(valueColumn.getHeader(), valueColumn);
+		BoxSeries<String> series = chart.addBoxSeries();
+		series.setLabel("data");
+		series.setLegendVisible(false);
+		series.setValues(data);
+		return chart;
+	}
+
+	// -- Helper methods --
+
 	private void tableChanged() {
 		if(keyColumn != null)
 			keyColumn.setChoices(table, c -> c.getHeader());
@@ -55,28 +77,9 @@ public class BoxPlotPlugin implements Command {
 
 	private void createChart() {
 		if (keyColumn != null)
-			buildChartWithKeys();
+			output = generateChart(plotService, keyColumn.get(), valueColumns.get());
 		else
-			buildChartWithoutKeys();
-	}
-
-	private void buildChartWithKeys() {
-		output = ChartBuilderWithKey.build(plotService, keyColumn.get(), valueColumns.get());
-		buildTitle();
-	}
-
-	private void buildChartWithoutKeys() {
-		CategoryChart<String> chart = plotService.newCategoryChart(String.class);
-		chart.numberAxis().setAutoRange();
-		chart.categoryAxis().setLabel("Column");
-		Map<String, Collection<Double>>	data = new TreeMap<>();
-		for (Column<Double> valueColumn : valueColumns.get())
-			data.put(valueColumn.getHeader(), valueColumn);
-		BoxSeries<String> series = chart.addBoxSeries();
-		series.setLabel("data");
-		series.setLegendVisible(false);
-		series.setValues(data);
-		output = chart;
+			output = generateChart(plotService, valueColumns.get());
 		buildTitle();
 	}
 
