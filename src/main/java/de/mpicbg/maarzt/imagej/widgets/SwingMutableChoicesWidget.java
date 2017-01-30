@@ -1,4 +1,4 @@
-package widgets;
+package de.mpicbg.maarzt.imagej.widgets;
 
 import org.scijava.module.MethodCallException;
 import org.scijava.plugin.Plugin;

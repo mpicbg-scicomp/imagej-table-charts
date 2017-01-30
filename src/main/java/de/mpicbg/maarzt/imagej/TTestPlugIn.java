@@ -1,3 +1,5 @@
+package de.mpicbg.maarzt.imagej;
+
 import net.imagej.table.Column;
 import net.imagej.table.Table;
 import org.apache.commons.math3.stat.inference.TTest;
@@ -6,7 +8,7 @@ import org.scijava.ItemVisibility;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import widgets.MutableChoices;
+import de.mpicbg.maarzt.imagej.widgets.MutableChoices;
 
 @Plugin(type = Command.class, menuPath="Table>Calculate t-Test")
 public class TTestPlugIn implements Command {

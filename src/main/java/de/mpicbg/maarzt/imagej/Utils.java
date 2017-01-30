@@ -1,3 +1,5 @@
+package de.mpicbg.maarzt.imagej;
+
 import net.imagej.table.Column;
 import net.imagej.table.DoubleColumn;
 

@@ -1,4 +1,4 @@
-package widgets;
+package de.mpicbg.maarzt.imagej.widgets;
 
 import java.util.Set;
 

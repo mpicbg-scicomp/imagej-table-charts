@@ -1,3 +1,5 @@
+package de.mpicbg.maarzt.imagej;
+
 import net.imagej.plot.AbstractPlot;
 import net.imagej.plot.BoxSeries;
 import net.imagej.plot.CategoryChart;
@@ -7,11 +9,10 @@ import net.imagej.table.Table;
 import org.scijava.ItemIO;
 import org.scijava.ItemVisibility;
 import org.scijava.command.Command;
-import org.scijava.display.Display;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import widgets.MultipleChoices;
-import widgets.MutableChoices;
+import de.mpicbg.maarzt.imagej.widgets.MultipleChoices;
+import de.mpicbg.maarzt.imagej.widgets.MutableChoices;
 
 import java.util.*;
 

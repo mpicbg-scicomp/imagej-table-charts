@@ -1,4 +1,4 @@
-package widgets;
+package de.mpicbg.maarzt.imagej.widgets;
 
 import net.imagej.table.Table;
 import net.imagej.table.TableDisplay;
@@ -10,8 +10,6 @@ import org.scijava.widget.InputWidget;
 import org.scijava.widget.WidgetModel;
 
 import javax.swing.*;
-import java.lang.reflect.Type;
-import java.lang.reflect.WildcardType;
 import java.util.List;
 import java.util.Vector;
 

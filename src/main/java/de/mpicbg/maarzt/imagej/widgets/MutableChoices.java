@@ -1,4 +1,4 @@
-package widgets;
+package de.mpicbg.maarzt.imagej.widgets;
 
 /**
  * @author Matthias Arzt

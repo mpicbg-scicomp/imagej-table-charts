@@ -1,3 +1,5 @@
+package de.mpicbg.maarzt.imagej;
+
 import fiji.util.gui.GenericDialogPlus;
 import net.imagej.ImageJ;
 import net.imagej.table.*;

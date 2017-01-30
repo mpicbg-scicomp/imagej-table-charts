@@ -1,4 +1,4 @@
-/*
+package de.mpicbg.maarzt.imagej;/*
  * To the extent possible under law, the ImageJ developers have waived
  * all copyright and related or neighboring rights to this tutorial code.
  *
@@ -14,7 +14,7 @@ import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.util.Colors;
-import widgets.MutableChoices;
+import de.mpicbg.maarzt.imagej.widgets.MutableChoices;
 
 import java.util.ArrayList;
 import java.util.List;

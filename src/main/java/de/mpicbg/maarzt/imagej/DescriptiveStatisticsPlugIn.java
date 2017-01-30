@@ -1,3 +1,5 @@
+package de.mpicbg.maarzt.imagej;
+
 import net.imagej.table.*;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
